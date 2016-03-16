@@ -50,3 +50,8 @@ Contributions
 -------------
 
 Parsers for new datasets are welcome.
+
+License
+-------
+
+Released under MIT license.
