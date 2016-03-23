@@ -4,7 +4,7 @@ import numpy as np
 
 class Dataset:
     """
-    A list of data and target pairs.
+    Two immutable Numpy arrays holding data and targets of a dataset.
     """
 
     def __init__(self, data=None, target=None):
@@ -19,6 +19,8 @@ class Dataset:
         data = np.array(data)
         target = np.array(target)
         assert len(data) == len(target)
+        data.setflags(write=False)
+        target.setflags(write=False)
         self._data = data
         self._target = target
 

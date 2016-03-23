@@ -42,13 +42,13 @@ class Mnist(Step):
         data_array, data_size, rows, cols = cls._read_data(data_filename)
         target_array, target_size = cls._read_target(target_filename)
         assert data_size == target_size
-        dataset = Dataset(np.zeros((data_size, rows, cols)),
-                          np.zeros((target_size, 10)))
+        data = np.zeros((data_size, rows, cols))
+        target = np.zeros((target_size, 10))
         for i in range(data_size):
             current = data_array[i * rows * cols:(i + 1) * rows * cols]
-            dataset.data[i] = np.array(current).reshape(rows, cols) / 255
-            dataset.target[i, target_array[i]] = 1
-        return dataset
+            data[i] = np.array(current).reshape(rows, cols) / 255
+            target[i, target_array[i]] = 1
+        return Dataset(data, target)
 
     @staticmethod
     def _read_data(filename):
