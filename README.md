@@ -9,14 +9,14 @@ Example
 ```python
 from sets import Mnist
 
-# Download, parse and cache a dataset.
-dataset = Mnist()
+# Download, parse and cache the dataset.
+train, test = Mnist()()
 
 # Sample random batches.
-data, target = dataset.train.random_batch(50)
+data, target = train.random_batch(50)
 
 # Iterate over all examples.
-for data, target in dataset.test:
+for data, target in test:
     pass
 ```
 

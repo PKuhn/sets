@@ -2,10 +2,10 @@ import struct
 import array
 import gzip
 import numpy as np
-from dataset.dataset import Dataset, Parser
+from sets.core import Step, Dataset
 
 
-class Mnist(Parser):
+class Mnist(Step):
     """
     The MNIST database of handwritten digits, available from this page, has a
     training set of 60,000 examples, and a test set of 10,000 examples. It is a
@@ -16,31 +16,39 @@ class Mnist(Parser):
     and formatting. (From: http://yann.lecun.com/exdb/mnist/)
     """
 
-    urls = [
-        'http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz',
-        'http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz',
-        'http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz',
-        'http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz',
-    ]
+    def __init__(self, provider='http://yann.lecun.com/exdb/mnist'):
+        self._provider = provider
 
-    def parse(self, train_x, train_y, test_x, test_y):
-        train = list(self.read(train_x, train_y))
-        test = list(self.read(test_x, test_y))
-        train_data, train_target = [x[0] for x in train], [x[1] for x in train]
-        test_data, test_target = [x[0] for x in test], [x[1] for x in test]
-        return train_data, train_target, test_data, test_target
+    def __call__(self):
+        train = self.cache('train', self._train_dataset)
+        test = self.cache('test', self._test_dataset)
+        return train, test
+
+    def _train_dataset(self):
+        data = self.download(self._url('/train-images-idx3-ubyte.gz'))
+        target = self.download(self._url('/train-labels-idx1-ubyte.gz'))
+        return self._read_dataset(data, target)
+
+    def _test_dataset(self):
+        data = self.download(self._url('/t10k-images-idx3-ubyte.gz'))
+        target = self.download(self._url('/t10k-labels-idx1-ubyte.gz'))
+        return self._read_dataset(data, target)
+
+    def _url(self, ressource):
+        return self._provider + '/' + ressource
 
     @classmethod
-    def read(cls, data_filename, target_filename):
+    def _read_dataset(cls, data_filename, target_filename):
         data_array, data_size, rows, cols = cls._read_data(data_filename)
         target_array, target_size = cls._read_target(target_filename)
         assert data_size == target_size
+        dataset = Dataset(np.zeros((data_size, rows, cols)),
+                          np.zeros((target_size, 10)))
         for i in range(data_size):
-            data = data_array[i * rows * cols:(i + 1) * rows * cols]
-            data = np.array(data).reshape(rows * cols) / 255
-            target = np.zeros(10)
-            target[target_array[i]] = 1
-            yield data, target
+            current = data_array[i * rows * cols:(i + 1) * rows * cols]
+            dataset.data[i] = np.array(current).reshape(rows, cols) / 255
+            dataset.target[i, target_array[i]] = 1
+        return dataset
 
     @staticmethod
     def _read_data(filename):
