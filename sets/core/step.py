@@ -3,7 +3,7 @@ import os
 import random
 import shutil
 from urllib.request import urlopen
-from sets.core.dataset import Dataset
+from core.dataset import Dataset
 
 
 class Step:
