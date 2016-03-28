@@ -1,6 +1,6 @@
 from nltk import word_tokenize
 from unittest.mock import MagicMock
-from sets.semeval import SemEvalRelation
+from sets.semeval import SemEvalRelation, SemEvalEmbedder
 import numpy as np
 
 
@@ -17,7 +17,7 @@ def test_sentence_embedding():
     m = MagicMock()
     m.__getitem__.return_value = [1, 2, 3]
     sent = 'The E2 belongs to the E1'
-    rel = SemEvalRelation._get_array_for_word(word_tokenize(sent), 'the', 4, m)
+    rel = SemEvalEmbedder._get_array_for_word(word_tokenize(sent), 'the', 4, m)
     assert((np.array([-1, 3, 1, 2, 3]) == rel).all())
 
 
@@ -25,13 +25,11 @@ def test_matrix_creation():
     sent = 'The E2 belongs to the E1'
     max_length = 8
     embeddings = build_mock_embeddings()
-    result = SemEvalRelation.get_matrix_for_relation(sent, max_length,
+    result = SemEvalEmbedder.get_matrix_for_relation(sent, max_length,
                                                      embeddings)
-    print(result.shape)
     assert(result.shape == (8, 5))
     assert((result[7] == np.array([0, 0, 0, 0, 0])).all())
     assert((result[0] == np.array([-5, -1, 1, 2, 3])).all())
-    print(result[1])
 
 
 def build_mock_embeddings():
