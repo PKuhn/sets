@@ -7,7 +7,7 @@ class Dataset:
     Two immutable Numpy arrays holding data and targets of a dataset.
     """
 
-    def __init__(self, data=None, target=None):
+    def __init__(self, data, target):
         """
         Data and target are expected to each be either Numpy arrays or
         filenames to Numpy arrays. Both must be of the same length.

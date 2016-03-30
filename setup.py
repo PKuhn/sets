@@ -67,7 +67,8 @@ SETUP_REQUIRES = [
 ]
 
 INSTALL_REQUIRES = [
-    'numpy'
+    'numpy',
+    'requests'
 ]
 
 TESTS_REQUIRE = [
@@ -89,6 +90,6 @@ if __name__ == '__main__':
         packages=['sets', 'sets.core'],
         setup_requires=SETUP_REQUIRES,
         install_requires=INSTALL_REQUIRES,
-        tests_require=TESTS_REQUIRE,
+        tests_require=TESTS_REQUIRE + INSTALL_REQUIRES,
         cmdclass={'test': TestCommand, 'build_ext': BuildExtCommand},
     )

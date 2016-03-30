@@ -1,2 +1,6 @@
+from .concat import Concat
+from .glove import Glove
 from .mnist import Mnist
-from .semeval import SemEvalRelation, SemEvalEmbedder
+from .relative_indices import RelativeIndices
+from .semeval import SemEvalRelation
+from .tokenize import Tokenize
