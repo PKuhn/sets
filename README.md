@@ -26,6 +26,18 @@ Datasets
 | Dataset | Description | Format | Size |
 | ------- | ----------- | ------ | ---- |
 | `Mnist` | Standard dataset of handwritten digits. | Data is normalized to 0-1 range. Targets are one-hot encoded. | 60k/10k |
+| `SemEvalRelation` | Relation classification from the SemEval 2010 conference. | String sentences with entities represented as `E1` and `E2`. | 8k |
+
+Utilities
+---------
+
+| Utility | Description |
+| ------- | ----------- |
+| `Tokenize` | Split sentences using the NLTK tokenizer and pass the tokens with empty strings. |
+| `Glove` | Replace string words by pre-computed vector embeddings from the Glovel mode. |
+| `OneHot` | Replace values by their index in a list of provided words. |
+| `Concat` | Concatenate the data rows of the provided dataests. |
+| `RelativeIndices` | Return a new dataset of the relative indices of provided words in each sequence. |
 
 Interface
 ---------
@@ -43,23 +55,23 @@ The dataset class is used to hold an immutable array of data and their targets.
 The step class is used for producing and processing datasets. All steps have a `__call__(self)` function that returns one or more dataset objects. For example, a parser may return the training set and the test set.
 
 ```python
-parser = Mnist()
-train, test = parser()
+mnist = sets.Mnist()
+train, test = mnist()
 ```
 
 An embedding class may take as parameters to `__call__(self)` a dataset with string values and return a version of this dataset with the words replaced by their embeddings.
 
 ```python
-embeddings = Embeddings()
-assert dataset.data.dtype == '<U20'
-dataset = embeddings(dataset)
-assert dataset.data.dtype == 'float64'
+tokenize = sets.Tokenize()
+glove = sets.Glove()
+dataset = sets.Tokenize(dataset)
+dataset = sets.Glove(dataset)
 ```
 
 Caching
 -------
 
-By default, datasets will be cached in `~/.dataset/`.
+By default, datasets will be cached inside `~/.dataset/`.
 
 Contributions
 -------------
@@ -69,4 +81,4 @@ Parsers for new datasets are welcome.
 License
 -------
 
-Released under MIT license.
+Released under the MIT license.
