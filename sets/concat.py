@@ -8,6 +8,6 @@ class Concat(Step):
         self._targets_from = targets_from
 
     def __call__(self, *datasets):
-        data = np.concatenate(x.data for x in datasets, axis=1)
+        data = np.concatenate([x.data for x in datasets], axis=2)
         target = datasets[self._targets_from].target
         return Dataset(data, target)

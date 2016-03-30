@@ -1,11 +1,12 @@
-from sets.core import Embedding, Dataset
+import numpy as np
+from sets.core import Embedding
 
 
-class HotWord(Embedding):
+class OneHot(Embedding):
 
     def __init__(self, words, embed_data=False, embed_target=False):
         table = self._construct_table(words)
-        super().__init__(table, dimensions, embed_data, embed_target)
+        super().__init__(table, len(table), embed_data, embed_target)
 
     @staticmethod
     def _construct_table(words):

@@ -1,7 +1,8 @@
+import os
 import itertools
 from zipfile import ZipFile
 import re
-import numpy as np
+import requests
 from sets.core import Step, Dataset
 
 
@@ -38,23 +39,25 @@ class SemEvalRelation(Step):
         response = requests.get(download_page)
         assert response.status_code == 200
         url = re.search(r'get.php?[^"]*', response.text).group(0)
-        return self.download(url, filename)
+        url = 'http://semeval2.fbk.eu/' + url.replace(' ', '%20')
+        return cls.download(url, filename)
 
     @classmethod
     def _parse(cls, file_):
-        paragraphs = itertoos.groupby(file_, lambda x: x != b'\r\n')
+        paragraphs = itertools.groupby(file_, lambda x: x != b'\r\n')
         paragraphs = [list(g) for k, g in paragraphs if k]
         data = [cls._process_data(x[0]) for x in paragraphs]
-        target = [cls._process_target(example[1]) for x in paragraphs]
+        target = [cls._process_target(x[1]) for x in paragraphs]
         return Dataset(data, target)
 
     @classmethod
     def _process_data(cls, line):
-        line = line.strip()
-        line = cls._regex_e1.sub(' <e1/> ', line)
-        line = cls._regex_e2.sub(' <e2/> ', line)
+        line = str(line).strip('\r\n ')
+        line = cls._regex_e1.sub(' E1 ', line)
+        line = cls._regex_e2.sub(' E2 ', line)
         return line
 
     @staticmethod
     def _process_target(line):
-        return line.strip()
+        line = str(line).strip('\r\n ')
+        return line

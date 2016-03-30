@@ -12,6 +12,7 @@ class Dataset:
         Data and target are expected to each be either Numpy arrays or
         filenames to Numpy arrays. Both must be of the same length.
         """
+        # pylint: disable=redefined-variable-type
         if isinstance(data, str):
             data = np.load(data)
         if isinstance(target, str):

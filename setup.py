@@ -63,12 +63,13 @@ class BuildExtCommand(build_ext):
 DESCRIPTION = 'Read datasets in a standard way.'
 
 SETUP_REQUIRES = [
-    'numpy'
+    'numpy',
 ]
 
 INSTALL_REQUIRES = [
     'numpy',
-    'requests'
+    'requests',
+    'nltk',
 ]
 
 TESTS_REQUIRE = [

@@ -1,4 +1,5 @@
 from zipfile import ZipFile
+import numpy as np
 from sets.core import Embedding
 
 
@@ -11,8 +12,7 @@ class Glove(Embedding):
 
     def __init__(self, dimensions=100, embed_data=False, embed_target=False):
         assert dimensions in (50, 100, 300)
-        table = self.cache('embeddings-{}'.format(dimensions),
-                           lambda: self.load(dimensions))
+        table = self._load(dimensions)
         super().__init__(table, dimensions, embed_data, embed_target)
 
     @classmethod
@@ -21,14 +21,13 @@ class Glove(Embedding):
         filename = 'glove.6B.{}d.txt'.format(dimensions)
         with ZipFile(path, 'r') as archive:
             with archive.open(filename) as file_:
-                return cls._load_embeddings(file_)
+                return cls._parse(file_)
 
-    def _load_embeddings(self, file_):
+    @staticmethod
+    def _parse(file_):
         table = {}
-        print('Load embeddings')
         for line in file_:
             chunks = line.split()
             key, vector = chunks[0], chunks[1:]
-            key = key.decode('utf-8')
-            table[key] = vector
+            table[key.decode('utf-8')] = np.array(vector).astype(float)
         return table

@@ -1,4 +1,5 @@
-from sets.core import Step
+import numpy as np
+from sets.core import Step, Dataset
 
 
 class Embedding(Step):
@@ -8,15 +9,16 @@ class Embedding(Step):
     """
 
     def __init__(self, table, dimensions, embed_data=False, embed_target=False):
-        assert all(len(x) == dimensions for x in self.table.values())
+        assert all(len(x) == dimensions for x in table.values())
         assert embed_data or embed_target
         self._table = table
         self._dimensions = dimensions
         self._embed_data = embed_data
         self._embed_target = embed_target
-        self._average = sum(self._table.values()) / len(self._table)
+        self._average = sum(table.values()) / len(table)
 
     def __call__(self, dataset):
+        # pylint: disable=arguments-differ
         data = dataset.data
         target = dataset.target
         if self._embed_data:
@@ -36,20 +38,21 @@ class Embedding(Step):
 
     @property
     def dimensions(self):
-        assert self._dimensions
+        return self._dimensions
 
     def lookup(self, word):
-        if word in self:
+        if word in self._table:
             return self._table[word]
         else:
             return self.fallback(word)
 
     def fallback(self, word):
+        # pylint: disable=unused-argument
         return self._average
 
     def _replace(self, data):
-        shape = data.shape + [self.dimensions]
-        replaced = np.empty(shape, dtype=np.float32)
+        shape = data.shape + (self.dimensions,)
+        replaced = np.empty(shape)
         for index, word in np.ndenumerate(data):
             replaced[index] = self.lookup(word)
         return replaced

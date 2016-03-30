@@ -1,6 +1,5 @@
 import errno
 import os
-import random
 import shutil
 from urllib.request import urlopen
 from sets.core.dataset import Dataset
