@@ -14,8 +14,9 @@ class SemEvalRelation(Step):
     From: http://semeval2.fbk.eu/semeval2.php?location=tasks#T11
     """
 
-    _regex_e1 = re.compile(r'\s?<e1>.*</e1>\s?')
-    _regex_e2 = re.compile(r'\s?<e2>.*</e2>\s?')
+    _regex_line = re.compile(r'^[0-9]+\t"(.*)"$')
+    _regex_e1 = re.compile(r'<e1>.*</e1>')
+    _regex_e2 = re.compile(r'<e2>.*</e2>')
 
     def __call__(self):
         return self.cache('train', self._parse_train)
@@ -52,9 +53,10 @@ class SemEvalRelation(Step):
 
     @classmethod
     def _process_data(cls, line):
-        line = str(line).strip('\r\n ')
-        line = cls._regex_e1.sub(' E1 ', line)
-        line = cls._regex_e2.sub(' E2 ', line)
+        line = line.decode('ascii').strip()
+        line = cls._regex_line.search(line).group(1)
+        line = cls._regex_e1.sub('<e1>', line)
+        line = cls._regex_e2.sub('<e2>', line)
         return line
 
     @staticmethod
