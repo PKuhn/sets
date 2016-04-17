@@ -34,6 +34,7 @@ class Dataset:
         return self._target
 
     def __len__(self):
+        assert len(self.data) == len(self.target)
         return len(self.data)
 
     def __iter__(self):

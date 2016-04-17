@@ -2,14 +2,14 @@ import numpy as np
 from sets.core import Step, Dataset
 
 
-class RelativeIndices(Step):
+class TagDistance(Step):
 
-    def __init__(self, *names):
-        self._names = names
+    def __init__(self, *tags):
+        self._tags = tags
 
     def __call__(self, dataset):
         # pylint: disable=arguments-differ
-        shape = dataset.data.shape + (len(self._names),)
+        shape = dataset.data.shape + (len(self._tags),)
         data = np.empty(shape)
         for index, tokens in enumerate(dataset.data):
             positions = self._positions(tokens)
@@ -17,7 +17,7 @@ class RelativeIndices(Step):
         return Dataset(data, dataset.target)
 
     def _positions(self, tokens):
-        return [np.where(tokens == x)[0][0] for x in self._names]
+        return [np.where(tokens == x)[0][0] for x in self._tags]
 
     @staticmethod
     def _relative_sequence(positions, length):

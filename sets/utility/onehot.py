@@ -8,12 +8,23 @@ class OneHot(Embedding):
         table = self._construct_table(words)
         super().__init__(table, len(table), embed_data, embed_target)
 
-    @staticmethod
-    def _construct_table(words):
+    def lookup(self, word):
+        return super().lookup(self._obtain_key(word))
+
+    @classmethod
+    def _construct_table(cls, words):
         table = {}
-        words = set(words)
         for word in words:
+            key = cls._obtain_key(word)
+            if key in table:
+                continue
             vector = np.zeros(len(words))
             vector[len(table)] = 1
-            table[word] = vector
+            table[key] = vector
         return table
+
+    @staticmethod
+    def _obtain_key(word):
+        if isinstance(word, np.ndarray):
+            return word.tostring()
+        return word
