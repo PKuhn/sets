@@ -82,7 +82,7 @@ TESTS_REQUIRE = [
 if __name__ == '__main__':
     setuptools.setup(
         name='sets',
-        version='0.2.0',
+        version='0.2.2',
         description=DESCRIPTION,
         url='http://github.com/danijar/sets',
         author='Danijar Hafner',
