@@ -14,22 +14,27 @@ class Tokenize(Step):
         data = self._pad(data)
         return Dataset(data, dataset.target)
 
-    def tokenize(self, sentence):
-        tokens = nltk.word_tokenize(sentence)
-        tokens = [x.lower() for x in tokens]
-        return tokens
-
-    def _process(self, sentence):
+    @classmethod
+    def _process(cls, sentence):
+        """
+        Tokenize a sentence while preserving tags like <tag>.
+        """
         while True:
-            match = self._regex_tag.search(sentence)
+            match = cls._regex_tag.search(sentence)
             if not match:
-                yield from self.tokenize(sentence)
+                yield from cls._tokenize(sentence)
                 return
             chunk = sentence[:match.start()]
-            yield from self.tokenize(chunk)
+            yield from cls._tokenize(chunk)
             tag = match.group(0)
             yield tag
             sentence = sentence[(len(chunk) + len(tag)):]
+
+    @staticmethod
+    def _tokenize(sentence):
+        tokens = nltk.word_tokenize(sentence)
+        tokens = [x.lower() for x in tokens]
+        return tokens
 
     @staticmethod
     def _pad(data):
