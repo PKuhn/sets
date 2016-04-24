@@ -70,6 +70,7 @@ INSTALL_REQUIRES = [
     'numpy',
     'requests',
     'nltk',
+    'pandas'
 ]
 
 TESTS_REQUIRE = [
