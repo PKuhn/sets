@@ -5,7 +5,8 @@ class Split(Step):
 
     def __init__(self, *ratios):
         ratios = ratios or 0.66
-        ratios = [0] + list(ratios) + [len(ratios)]
+        ratios = ratios if hasattr(ratios, '__len__') else [ratios]
+        ratios = [0] + list(ratios) + [1]
         if list(ratios) != sorted(ratios):
             raise ValueError('ratios must be in order')
         if len(ratios) != len(set(ratios)):

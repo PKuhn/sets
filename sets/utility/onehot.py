@@ -5,20 +5,18 @@ from sets.core import Embedding
 class OneHot(Embedding):
 
     def __init__(self, words, embed_data=False, embed_target=False):
-        table = self._construct_table(words)
-        super().__init__(table, len(table), embed_data, embed_target)
+        keys = list(set(self._obtain_key(x) for x in words))
+        table = self._construct_table(keys)
+        super().__init__(table, len(keys), embed_data, embed_target)
 
     def lookup(self, word):
         return super().lookup(self._obtain_key(word))
 
     @classmethod
-    def _construct_table(cls, words):
+    def _construct_table(cls, keys):
         table = {}
-        for word in words:
-            key = cls._obtain_key(word)
-            if key in table:
-                continue
-            vector = np.zeros(len(words))
+        for key in sorted(keys):
+            vector = np.zeros(len(keys))
             vector[len(table)] = 1
             table[key] = vector
         return table
