@@ -22,9 +22,10 @@ def test_concat(dataset):
 
 
 def test_onehot(dataset):
-    result = sets.OneHot(dataset.data, embed_target=True)(dataset)
+    result = sets.OneHot(dataset.target, embed_target=True)(dataset)
     assert result.target.shape[1] == len(np.unique(dataset.target))
-    assert (result.target.sum(axis=1) == 1).all()
+    assert (result.target.sum(axis=1)).all()
+    assert (result.target.max(axis=1)).all()
 
 
 def test_split(dataset):
