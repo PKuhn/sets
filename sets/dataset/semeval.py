@@ -8,36 +8,41 @@ from sets.core import Step, Dataset
 
 class SemEvalRelation(Step):
     """
-    Task 8 from the SemEval 2010 conference, named "Multi-Way Classification of
-    Semantic Relations Between Pairs of Nominals". Only the training set is
+    Task 8 from the SemEval 2010 conference, named 'Multi-Way Classification of
+    Semantic Relations Between Pairs of Nominals'. Only the training set is
     returned since we believe targets are not available for the test set.
     From: http://semeval2.fbk.eu/semeval2.php?location=tasks#T11
     """
+
+    DOWNLOAD_PAGE = \
+        'http://semeval2.fbk.eu/semeval2.php?' \
+        'location=download&task_id=11&datatype=test'
+    FILENAME = \
+        'SemEval2010_task8_all_data/' \
+        'SemEval2010_task8_training/TRAIN_FILE.TXT'
 
     _regex_line = re.compile(r'^[0-9]+\t"(.*)"$')
     _regex_e1 = re.compile(r'<e1>.*</e1>')
     _regex_e2 = re.compile(r'<e2>.*</e2>')
 
-    def __call__(self):
-        return self.cache('train', self._parse_train)
-
-    def _parse_train(self):
-        filepath = self._download()
-        with ZipFile(filepath, 'r') as archive:
-            filename = 'SemEval2010_task8_all_data/' \
-                       'SemEval2010_task8_training/TRAIN_FILE.TXT'
-            with archive.open(filename) as file_:
-                return self._parse(file_)
+    def __new__(cls):
+        train = cls.disk_cache('train', cls._parse_train)
+        return train
 
     @classmethod
-    def _download(cls):
+    def _parse_train(cls):
+        filepath = cls._download_task()
+        with ZipFile(filepath, 'r') as archive:
+            with archive.open(cls.FILENAME) as file_:
+                return cls._parse(file_)
+
+    @classmethod
+    def _download_task(cls):
         filename = 'task8.zip'
-        filepath = os.path.join(cls.folder(), filename)
+        filepath = os.path.join(cls.directory(), filename)
         if os.path.isfile(filepath):
             return filepath
-        download_page = 'http://semeval2.fbk.eu/semeval2.php?' \
-                        'location=download&task_id=11&datatype=test'
-        response = requests.get(download_page)
+        response = requests.get(cls.DOWNLOAD_PAGE)
         assert response.status_code == 200
         url = re.search(r'get.php?[^"]*', response.text).group(0)
         url = 'http://semeval2.fbk.eu/' + url.replace(' ', '%20')
@@ -49,7 +54,7 @@ class SemEvalRelation(Step):
         paragraphs = [list(g) for k, g in paragraphs if k]
         data = [cls._process_data(x[0]) for x in paragraphs]
         target = [cls._process_target(x[1]) for x in paragraphs]
-        return Dataset(data, target)
+        return Dataset(data=data, target=target)
 
     @classmethod
     def _process_data(cls, line):
@@ -61,5 +66,5 @@ class SemEvalRelation(Step):
 
     @staticmethod
     def _process_target(line):
-        line = str(line).strip('\r\n ')
+        line = line.decode('ascii').strip()
         return line

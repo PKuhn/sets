@@ -1,71 +1,73 @@
+import warnings
 import numpy as np
-from sets.core import Step, Dataset
+from sets.core import Step
 
 
 class Embedding(Step):
     """
-    Step that replaces string words by numeric vectors, usually using a lookup
-    table. The default fallback for unknown words is the average embedding
-    vector and a zero vector for falsy words.
+    Replace string words by numeric vectors using a lookup table. The default
+    fallback for unknown words is the average embedding vector and a zero
+    vector for falsy words.
     """
 
-    def __init__(self, table, dimensions, embed_data=False, embed_target=False):
-        assert all(len(x) == dimensions for x in table.values())
-        assert embed_data or embed_target
-        ordered = sorted(table.keys())
-        self._index = {k: i for i, k in enumerate(ordered)}
-        self._embeddings = np.array([table[x] for x in ordered])
-        self._dimensions = dimensions
-        self._embed_data = embed_data
-        self._embed_target = embed_target
-        self._average = sum(table.values()) / len(table)
+    def __init__(self, words, embeddings, depth):
+        """
+        Words is a list of words to embedd. Embeddings is a numpy array of same
+        length. Depth is the number of dimensions to keep. All further
+        dimensions are considered part of the word.
+        """
+        self._index = {self.key(k): i for i, k in enumerate(words)}
+        if len(self._index) != len(words):
+            warnings.warn('the keys of some words override each other')
+        self._embeddings = np.array(embeddings)
+        self._depth = depth
+        self._shape = self._embeddings.shape[1:]
+        self._average = self._embeddings.mean(axis=0)
+        self._zeros = np.zeros(self.shape)
 
-    def __call__(self, dataset):
+    @property
+    def shape(self):
+        return self._shape
+
+    def __call__(self, dataset, columns=None):
         # pylint: disable=arguments-differ
-        data = dataset.data
-        target = dataset.target
-        if self._embed_data:
-            data = self._embed(data)
-        if self._embed_target:
-            target = self._embed(target)
-        return Dataset(data, target)
+        dataset = dataset.copy()
+        columns = columns or dataset.columns
+        for column in columns:
+            dataset[column] = self._lookup_all(dataset[column])
+        return dataset
 
-    def __setitem(self, word, embedding):
-        self._table[self.key(word)] = embedding
+    def __contains__(self, word):
+        return self.key(word) in self._index
 
     def __getitem__(self, word):
         index = self._index[self.key(word)]
         embedding = self._embeddings[index]
         return embedding
 
-    def __in__(self, word):
-        return self.key(word) in self._index
-
-    @property
-    def dimensions(self):
-        return self._dimensions
-
     def key(self, word):
-        # Support embedding numpy vectors.
+        # pylint: disable=no-self-use
         if isinstance(word, np.ndarray):
             return word.tostring()
         return word
 
-    def lookup(self, word):
-        if word in self._index:
+    def fallback(self, word):
+        if isinstance(word, np.ndarray):
+            if not word.size:
+                return self._zeros
+        elif not word:
+            return self._zeros
+        return self._average
+
+    def _lookup_all(self, array):
+        array_shape = array.shape[:self._depth]
+        embedded = np.empty(array_shape + self.shape)
+        for index in np.ndindex(array_shape):
+            embedded[index] = self._lookup(array[index])
+        return embedded
+
+    def _lookup(self, word):
+        if word in self:
             return self[word]
         else:
             return self.fallback(word)
-
-    def fallback(self, word):
-        # pylint: disable=unused-argument
-        if not word:
-            return np.zeros(self.dimensions)
-        return self._average
-
-    def _embed(self, data):
-        shape = data.shape + (self.dimensions,)
-        embedded = np.empty(shape)
-        for index, word in np.ndenumerate(data):
-            embedded[index] = self.lookup(word)
-        return embedded

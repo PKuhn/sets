@@ -1,11 +1,10 @@
 import sets
 
 
-def ignore_test_semeval():
-    dataset = sets.SemEvalRelation()()
+def test_semeval():
+    dataset = sets.SemEvalRelation()
     dataset = sets.Tokenize()(dataset)
-    dataset = sets.OneHot(dataset.target, embed_target=True)(dataset)
-    indices = sets.TagDistance('<e1>', '<e2>')(dataset)
-    dataset = sets.Glove(100, embed_data=True)(dataset)
-    dataset = sets.Concat(target_from=0)(indices, dataset)
-    assert (dataset.data[:, :, :2] == indices.data[:, :]).all()
+    dataset = sets.OneHot(dataset.target)(dataset, columns=['target'])
+    dataset = sets.WordDistance('<e1>', '<e2>', depth=2)(dataset, column='data')
+    dataset = sets.Glove(100, depth=2)(dataset, columns=['data'])
+    dataset = sets.Concat(2, 'data')(dataset, columns=('data', 'word_distance'))

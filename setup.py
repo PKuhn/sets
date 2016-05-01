@@ -70,7 +70,6 @@ INSTALL_REQUIRES = [
     'numpy',
     'requests',
     'nltk',
-    'pandas'
 ]
 
 TESTS_REQUIRE = [
@@ -89,7 +88,7 @@ if __name__ == '__main__':
         author='Danijar Hafner',
         author_email='mail@danijar.com',
         license='MIT',
-        packages=['sets', 'sets.core', 'sets.dataset', 'sets.utility'],
+        packages=['sets', 'sets.core', 'sets.dataset', 'sets.process'],
         setup_requires=SETUP_REQUIRES,
         install_requires=INSTALL_REQUIRES,
         tests_require=TESTS_REQUIRE + INSTALL_REQUIRES,

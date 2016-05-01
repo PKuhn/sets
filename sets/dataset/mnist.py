@@ -13,29 +13,32 @@ class Mnist(Step):
     size-normalized and centered in a fixed-size image. It is a good database
     for people who want to try learning techniques and pattern recognition
     methods on real-world data while spending minimal efforts on preprocessing
-    and formatting. (From: http://yann.lecun.com/exdb/mnist/)
+    and formatting. From: http://yann.lecun.com/exdb/mnist/
     """
 
-    def __init__(self, provider='http://yann.lecun.com/exdb/mnist'):
-        self._provider = provider
-
-    def __call__(self):
-        train = self.cache('train', self._train_dataset)
-        test = self.cache('test', self._test_dataset)
+    def __new__(cls, host='http://yann.lecun.com/exdb/mnist'):
+        cls._host = host
+        train = cls.disk_cache('train', cls._train_dataset)
+        test = cls.disk_cache('test', cls._test_dataset)
         return train, test
 
-    def _train_dataset(self):
-        data = self.download(self._url('/train-images-idx3-ubyte.gz'))
-        target = self.download(self._url('/train-labels-idx1-ubyte.gz'))
-        return self._read_dataset(data, target)
+    @classmethod
+    def download(cls, url):
+        # pylint: disable=arguments-differ
+        url = cls._host + '/' + url
+        return super().download(url)
 
-    def _test_dataset(self):
-        data = self.download(self._url('/t10k-images-idx3-ubyte.gz'))
-        target = self.download(self._url('/t10k-labels-idx1-ubyte.gz'))
-        return self._read_dataset(data, target)
+    @classmethod
+    def _train_dataset(cls):
+        data = cls.download('/train-images-idx3-ubyte.gz')
+        target = cls.download('/train-labels-idx1-ubyte.gz')
+        return cls._read_dataset(data, target)
 
-    def _url(self, ressource):
-        return self._provider + '/' + ressource
+    @classmethod
+    def _test_dataset(cls):
+        data = cls.download('/t10k-images-idx3-ubyte.gz')
+        target = cls.download('/t10k-labels-idx1-ubyte.gz')
+        return cls._read_dataset(data, target)
 
     @classmethod
     def _read_dataset(cls, data_filename, target_filename):
@@ -48,7 +51,7 @@ class Mnist(Step):
             current = data_array[i * rows * cols:(i + 1) * rows * cols]
             data[i] = np.array(current).reshape(rows, cols) / 255
             target[i, target_array[i]] = 1
-        return Dataset(data, target)
+        return Dataset(data=data, target=target)
 
     @staticmethod
     def _read_data(filename):

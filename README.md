@@ -10,10 +10,10 @@ Example
 from sets import Mnist
 
 # Download, parse and cache the dataset.
-train, test = Mnist()()
+train, test = Mnist()
 
 # Sample random batches.
-data, target = train.random_batch(50)
+data, target = train.sample(50)
 
 # Iterate over all examples.
 for data, target in test:
@@ -26,52 +26,64 @@ Datasets
 | Dataset | Description | Format | Size |
 | ------- | ----------- | ------ | ---- |
 | `Mnist` | Standard dataset of handwritten digits. | Data is normalized to 0-1 range. Targets are one-hot encoded. | 60k/10k |
-| `SemEvalRelation` | Relation classification from the SemEval 2010 conference. | String sentences with entities represented as `E1` and `E2`. | 8k |
+| `SemEvalRelation` | Relation classification from the SemEval 2010 conference. | String sentences with entity tags `<e1>` and `<e2>`. | 8k |
 
-Utilities
+Processes
 ---------
 
 | Utility | Description |
 | ------- | ----------- |
-| `Tokenize` | Split sentences using the NLTK tokenizer and pass the tokens with empty strings. |
-| `Glove` | Replace string words by pre-computed vector embeddings from the Glovel mode. |
-| `OneHot` | Replace values by their index in a list of provided words. |
-| `Concat` | Concatenate the data rows of the provided dataests. |
-| `RelativeIndices` | Return a new dataset of the relative indices of provided words in each sequence. |
+| `Concat` | Concatenate the specified columns of a dataset. |
+| `Glove` | Replace words by pre-trained vectors from the Glovel mode. |
+| `Normalize` | Fit mean and std to a dataset and then normalize any dataset by that. |
+| `OneHot` | Replace words by their index in a specified list. |
+| `Split` | Split a dataset according to one or more ratios. |
+| `Tokenize` | Split and padd sentences using NLTK. Preserve tags in angle brackets. |
+| `WordDistance` | Add a column of offsets to the provided words. |
 
 Interface
 ---------
 
-The dataset class is used to hold an immutable array of data and their targets.
+The `Dataset` class holds data columns that are immutable Numpy arrays, equal
+in length. Strings index columns and integers index rows. Supports indexing by
+value, slice and list.
 
 | Attribute | Description |
 | --------- | ----------- |
-| `data` | Numpy array holding the data of all examples. Elements are float32 or string types or vectors thereof. |
-| `target` | Numpy array holding the targets of all examples. |
-| `__len__()` | Number of examples. |
-| `__iter__()` | Iterate over all pairs of data and targets. |
-| `random_batch(size)` | Return two lists of randomly sampled data and corresponding targets. |
+| `dataset.columns` | Sorted list of columns. |
+| `dataset.column`, `dataset['column']` | Get a copy of this column's Numpy array. |
+| `del dataset['column']` | Drop one or more columns. |
+| `len(dataset)` | Number of rows. Each column will be of that length. |
+| `for row in dataset` | Iterate over all rows as tuples. Elements of a tuple refer to the alphabetical order of the columns. |
+| `dataset.sample(size)` | Return new dataset of `size` randomly sampled rows. |
+| `dataset.copy()` | Perform a deep copy. |
 
-The step class is used for producing and processing datasets. All steps have a `__call__(self)` function that returns one or more dataset objects. For example, a parser may return the training set and the test set.
+The `Step` class is used for producing and processing datasets. All steps have
+a `__call__()` function that returns one or more dataset objects. For example,
+a parser may return the training set and the test set.
 
 ```python
-mnist = sets.Mnist()
-train, test = mnist()
+train, test = sets.Mnist()
 ```
 
-An embedding class may take as parameters to `__call__(self)` a dataset with string values and return a version of this dataset with the words replaced by their embeddings.
+An embedding class may take as parameters to `__call__()` a dataset with string
+values and return a version of this dataset with the words replaced by their
+embeddings.
 
 ```python
 tokenize = sets.Tokenize()
 glove = sets.Glove()
-dataset = sets.Tokenize(dataset)
-dataset = sets.Glove(dataset)
+dataset = tokenize(dataset, columns=['data'])
+dataset = glove(dataset, columns=['data'])
 ```
 
 Caching
 -------
 
-By default, datasets will be cached inside `~/.dataset/`.
+By default, datasets will be cached inside `~/.dataset/sets/`. To save even
+more time, use the `@sets.disk_cache(basename, directory, method=False)`
+decorator and apply it to your whole pipeline. It hashes function arguments in
+order to determine if a cache is valid.
 
 Contributions
 -------------

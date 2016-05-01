@@ -1,4 +1,4 @@
-from sets.core import Step, Dataset
+from sets.core import Step
 
 
 class Split(Step):
@@ -16,6 +16,4 @@ class Split(Step):
     def __call__(self, dataset):
         splits = [int(len(dataset) * x) for x in self._ratios]
         for start, end in zip(splits[:-1], splits[1:]):
-            data = dataset.data[start:end]
-            target = dataset.target[start:end]
-            yield Dataset(data, target)
+            yield dataset[start:end]
