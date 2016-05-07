@@ -16,4 +16,4 @@ def test_semeval():
 
 def test_ocr():
     dataset = sets.Ocr()
-    dataset = sets.OneHot(dataset.target)(dataset, columns=['target'])
+    dataset = sets.OneHot(dataset.target, depth=2)(dataset, columns=['target'])
