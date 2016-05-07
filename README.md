@@ -27,6 +27,7 @@ Datasets
 | ------- | ----------- | ------ | ---- |
 | `Mnist` | Standard dataset of handwritten digits. | Data is normalized to 0-1 range. Targets are one-hot encoded. | 60k/10k |
 | `SemEvalRelation` | Relation classification from the SemEval 2010 conference. | String sentences with entity tags `<e1>` and `<e2>`. | 8k |
+| `Ocr` | Handwritten letter sequences. | Binary images of 16x8 pixels. | 6877 |
 
 Processes
 ---------
@@ -54,7 +55,7 @@ value, slice and list.
 | `dataset.column`, `dataset['column']` | Get a copy of this column's Numpy array. |
 | `del dataset['column']` | Drop one or more columns. |
 | `len(dataset)` | Number of rows. Each column will be of that length. |
-| `for row in dataset` | Iterate over all rows as tuples. Elements of a tuple refer to the alphabetical order of the columns. |
+| `for row in dataset` | Iterate over all rows as tuples. Tuples are sorted by column names. |
 | `dataset.sample(size)` | Return new dataset of `size` randomly sampled rows. |
 | `dataset.copy()` | Perform a deep copy. |
 
