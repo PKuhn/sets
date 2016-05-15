@@ -1,50 +1,85 @@
-import os
 import sys
+import os
 import subprocess
 import setuptools
 from setuptools.command.build_ext import build_ext
-from setuptools.command.test import test
 
 
-class TestCommand(test):
+SETUP_REQUIRES = [
+    'numpy',
+]
 
-    description = 'run tests, linters and create a coverage report'
-    user_options = []
+INSTALL_REQUIRES = [
+    'numpy',
+    'requests',
+    'nltk',
+]
+
+
+class Command(setuptools.Command):
+
+    requires = []
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.returncode = 0
+        self._returncode = 0
 
     def finalize_options(self):
-        super().finalize_options()
-        # New setuptools don't need this anymore, thus the try block.
-        try:
-            # pylint: disable=attribute-defined-outside-init
-            self.test_args = []
-            self.test_suite = 'True'
-        except AttributeError:
-            pass
+        pass
 
-    def run_tests(self):
-        self._call('python3 -m pytest --cov=sets test')
-        self._call('python3 -m pylint sets')
-        self._call('python3 -m pylint test')
-        self._call('python3 -m pylint setup.py')
-        self._check()
+    def run(self):
+        if type(self).requires:
+            self.distribution.fetch_build_eggs(type(self).requires)
+            self.run_command('egg_info')
+            self.reinitialize_command('build_ext', inplace=1)
+            self.run_command('build_ext')
+        self.__call__()
+        if self._returncode:
+            sys.exit(self._returncode)
 
-    def _call(self, command):
+    def call(self, command):
         env = os.environ.copy()
         env['PYTHONPATH'] = ''.join(':' + x for x in sys.path)
-        print('Run command', command)
+        self.announce('Run command: {}'.format(command), level=2)
         try:
             subprocess.check_call(command.split(), env=env)
         except subprocess.CalledProcessError as error:
-            print('Command failed with exit code', error.returncode)
-            self.returncode = 1
+            self._returncode = 1
+            message = 'Command failed with exit code {}'
+            message = message.format(error.returncode)
+            self.announce(message, level=2)
 
-    def _check(self):
-        if self.returncode:
-            sys.exit(self.returncode)
+
+class TestCommand(Command):
+
+    requires = ['pytest', 'pytest-cov'] + INSTALL_REQUIRES
+    description = 'run tests and create a coverage report'
+    user_options = [('args=', None, 'args to forward to pytest')]
+
+    def initialize_options(self):
+        self.args = ''
+
+    def __call__(self):
+        self.call('python3 -m pytest --cov=sets test ' + self.args)
+
+
+class LintCommand(Command):
+
+    requires = ['pep8', 'pylint'] + INSTALL_REQUIRES
+    description = 'run linters'
+    user_options = [('args=', None, 'args to forward to pylint')]
+
+    def initialize_options(self):
+        self.args = ''
+
+    def finalize_options(self):
+        self.args += ' --rcfile=setup.cfg'
+
+    def __call__(self):
+        self.call('python3 -m pep8 sets test setup.py')
+        self.call('python3 -m pylint sets ' + self.args)
+        self.call('python3 -m pylint test ' + self.args)
+        self.call('python3 -m pylint setup.py ' + self.args)
 
 
 class BuildExtCommand(build_ext):
@@ -60,30 +95,11 @@ class BuildExtCommand(build_ext):
         self.include_dirs.append(numpy.get_include())
 
 
-DESCRIPTION = 'Read datasets in a standard way.'
-
-SETUP_REQUIRES = [
-    'numpy',
-]
-
-INSTALL_REQUIRES = [
-    'numpy',
-    'requests',
-    'nltk',
-]
-
-TESTS_REQUIRE = [
-    'pytest',
-    'pytest-cov',
-    'pylint',
-]
-
-
 if __name__ == '__main__':
     setuptools.setup(
         name='sets',
         version='0.3.1',
-        description=DESCRIPTION,
+        description='Read datasets in a standard way.',
         url='http://github.com/danijar/sets',
         author='Danijar Hafner',
         author_email='mail@danijar.com',
@@ -91,6 +107,9 @@ if __name__ == '__main__':
         packages=['sets', 'sets.core', 'sets.dataset', 'sets.process'],
         setup_requires=SETUP_REQUIRES,
         install_requires=INSTALL_REQUIRES,
-        tests_require=TESTS_REQUIRE + INSTALL_REQUIRES,
-        cmdclass={'test': TestCommand, 'build_ext': BuildExtCommand},
+        cmdclass={
+            'test': TestCommand,
+            'lint': LintCommand,
+            'build_ext': BuildExtCommand,
+        },
     )
