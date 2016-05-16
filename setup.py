@@ -14,6 +14,7 @@ INSTALL_REQUIRES = [
     'requests',
     'nltk',
     'lxml',
+    'definitions',
 ]
 
 
@@ -99,13 +100,14 @@ class BuildExtCommand(build_ext):
 if __name__ == '__main__':
     setuptools.setup(
         name='sets',
-        version='0.3.1',
+        version='0.3.2',
         description='Read datasets in a standard way.',
         url='http://github.com/danijar/sets',
         author='Danijar Hafner',
         author_email='mail@danijar.com',
         license='MIT',
         packages=['sets', 'sets.core', 'sets.dataset', 'sets.process'],
+        package_data={'sets': ['data/schema.yaml']},
         setup_requires=SETUP_REQUIRES,
         install_requires=INSTALL_REQUIRES,
         cmdclass={

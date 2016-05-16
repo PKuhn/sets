@@ -4,7 +4,21 @@ import functools
 import errno
 import shutil
 from urllib.request import urlopen
+import definitions
 
+def read_config(schema='data/schema.yaml', name='sets'):
+    filename = '.{}rc'.format(name)
+    paths = [
+        os.path.join(os.curdir, filename),
+        os.path.expanduser(os.path.join('~', filename)),
+        os.environ.get('{}_CONFIG'.format(name.upper())),
+    ]
+    schema = os.path.join(os.path.dirname(__file__), schema)
+    parser = definitions.Parser(schema)
+    for path in paths:
+        if path and os.path.isfile(path):
+            return parser(path)
+    return parser('{}')
 
 def disk_cache(basename, directory, method=False):
     """

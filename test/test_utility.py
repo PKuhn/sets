@@ -11,7 +11,6 @@ def dataset():
 
 def test_concat(dataset):
     dataset['other'] = [[1], [2], [3]]
-    print(dataset)
     result = sets.Concat(1, 'data')(dataset, columns=('data', 'other'))
     assert 'other' not in result.columns
     assert (result.target == dataset.target).all()

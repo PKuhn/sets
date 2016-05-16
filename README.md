@@ -81,10 +81,22 @@ dataset = glove(dataset, columns=['data'])
 Caching
 -------
 
-By default, datasets will be cached inside `~/.dataset/sets/`. To save even
-more time, use the `@sets.disk_cache(basename, directory, method=False)`
-decorator and apply it to your whole pipeline. It hashes function arguments in
-order to determine if a cache is valid.
+By default, datasets will be cached inside `~/.dataset/sets/`. You can change
+the directory by specifying the `directory` variable in the configuration.  To
+save even more time, use the `@sets.disk_cache(basename, directory,
+method=False)` decorator and apply it to your whole pipeline. It hashes
+function arguments in order to determine if a cache is valid.
+
+Configuration
+-------------
+
+The configuration is a YAML file named `.setsrc`.  Sets looks for the file in
+the current working directory, the user's home directory and the `SETS_CONFIG`
+environment variable.
+
+```yaml
+directory: ~/.dataset/sets
+```
 
 Contributions
 -------------

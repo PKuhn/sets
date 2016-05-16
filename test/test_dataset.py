@@ -1,6 +1,8 @@
 import sets
+import pytest
 
 
+@pytest.mark.skip
 def test_semeval():
     dataset = sets.SemEvalRelation()
     dataset = sets.Tokenize()(dataset)
@@ -12,6 +14,7 @@ def test_semeval():
         dataset, columns=('data', 'word_distance'))
 
 
+@pytest.mark.skip
 def test_ocr():
     dataset = sets.Ocr()
     dataset = sets.OneHot(dataset.target, depth=2)(dataset, columns=['target'])
