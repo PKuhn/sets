@@ -13,6 +13,7 @@ INSTALL_REQUIRES = [
     'numpy',
     'requests',
     'nltk',
+    'lxml',
 ]
 
 
