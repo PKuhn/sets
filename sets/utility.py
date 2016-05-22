@@ -37,7 +37,9 @@ def disk_cache(basename, directory, method=False):
             # Don't use self or cls for the invalidation hash.
             if method and key:
                 key = key[1:]
-            filename = '{}-{}.pickle'.format(basename, hash(key))
+            # Only use positive hash to avoid double dash filenames
+            identifier = abs(hash(key))
+            filename = '{}-{}.pickle'.format(basename, identifier)
             filepath = os.path.join(directory, filename)
             if os.path.isfile(filepath):
                 with open(filepath, 'rb') as handle:

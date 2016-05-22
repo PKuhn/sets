@@ -1,4 +1,5 @@
 # pylint: disable=no-self-use
+from os import listdir
 import sets
 
 
@@ -37,3 +38,11 @@ class TestDiskCache:
         assert called == 1
         assert pipeline(None) == 'Foo'
         assert called == 1
+
+    def test_kwarg_hash(self, tmpdir):
+        @sets.disk_cache('foo', str(tmpdir), method=True)
+        def dummy(self, arg, kwarg=False):
+            pass
+        dummy(None, "foo")
+        dummy(None, "foo", kwarg=True)
+        assert(2 == len(listdir(str(tmpdir))))
