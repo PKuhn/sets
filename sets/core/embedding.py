@@ -29,12 +29,17 @@ class Embedding(Step):
     def shape(self):
         return self._shape
 
-    def __call__(self, dataset, columns=None):
+    def __call__(self, dataset, columns=None, return_found=False):
         # pylint: disable=arguments-differ
         dataset = dataset.copy()
         columns = columns or dataset.columns
+        found, overall = 0, 0
         for column in columns:
-            dataset[column] = self._lookup_all(dataset[column])
+            dataset[column], f, o = self._lookup_all(dataset[column])
+            found += f
+            overall += o
+        if return_found:
+            return dataset, found / overall
         return dataset
 
     def __contains__(self, word):
@@ -52,22 +57,29 @@ class Embedding(Step):
         return word
 
     def fallback(self, word):
-        if isinstance(word, np.ndarray):
-            if not word.size:
-                return self._zeros
-        elif not word:
-            return self._zeros
         return self._average
 
     def _lookup_all(self, array):
         array_shape = array.shape[:self._depth]
         embedded = np.empty(array_shape + self.shape)
+        found, overall = 0, 0
         for index in np.ndindex(array_shape):
-            embedded[index] = self._lookup(array[index])
-        return embedded
+            word = array[index]
+            found += word in self or self._is_null(word)
+            overall += 1
+            embedded[index] = self._lookup(word)
+        return embedded, found, overall
 
     def _lookup(self, word):
         if word in self:
             return self[word]
+        if self._is_null(word):
+            return self._zeros
         else:
-            return self.fallback(word)
+            return self._average
+
+    @staticmethod
+    def _is_null(word):
+        if isinstance(word, np.ndarray):
+            return not word.size
+        return not word

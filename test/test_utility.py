@@ -46,3 +46,12 @@ def test_normalize(dataset):
     assert np.allclose(other.data.std(axis=0), np.ones(width))
     assert np.allclose(result.target.mean(axis=0), np.zeros(width))
     assert np.allclose(result.target.std(axis=0), np.ones(width))
+
+def test_embedding_found():
+    data = list('ceabb')
+    target = list('abddd')
+    vocabulary = list('abc')
+    dataset = sets.Dataset(data=data, target=target)
+    dataset, found = sets.OneHot(vocabulary)(
+        dataset, columns=['data', 'target'], return_found=True)
+    assert found == 6 / 10
