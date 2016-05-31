@@ -1,7 +1,8 @@
+import errno
+import functools
 import os
 import pickle
-import functools
-import errno
+import re
 import shutil
 from urllib.request import urlopen
 import definitions
@@ -78,3 +79,13 @@ def ensure_directory(directory):
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise e
+
+
+def natural_sort(collection):
+    """
+    Sort a collection of strings. Treat passages of consecutive digits as
+    numbers, even without leading zeros.
+    """
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    key = lambda x: [convert(a) for a in re.split('([0-9]+)', x)]
+    return sorted(collection, key=key)
