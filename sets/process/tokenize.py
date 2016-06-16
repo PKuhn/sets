@@ -1,22 +1,34 @@
 import re
 import nltk
 import numpy as np
-from sets.core import Step
+import h5py
+from sets.core import MapStep
 
 
-class Tokenize(Step):
+class Tokenize(MapStep):
 
     _regex_tag = re.compile(r'<[^>]+>')
 
-    def __call__(self, dataset, columns=None):
-        # pylint: disable=arguments-differ
-        dataset = dataset.copy()
-        columns = columns or dataset.columns
-        for column in columns:
-            tokens = [list(self._tokenize(x)) for x in dataset[column]]
-            padded = self._pad(tokens)
-            dataset[column] = padded
-        return dataset
+    def _get_datatype(self, column):
+        return h5py.special_dtype(vlen=str)
+
+    def _get_shape(self, ds):
+        max_len = 0
+        for sent in ds:
+            tokenized = list(self._tokenize(sent))
+            max_len = max(max_len, len(tokenized))
+        self.shape = (ds.shape[0], max_len)
+        return self.shape
+
+    def apply(self, sentences):
+        shape = (sentences.shape[0], self.shape[1])
+        tokenized = np.empty(shape, dtype=object)
+        for idx, sentence in enumerate(sentences):
+            tokenized_sentence = list(self._tokenize(sentence))
+            padding = ['' for _ in range(
+                self.shape[1] - len(tokenized_sentence))]
+            tokenized[idx] = tokenized_sentence + padding
+        return tokenized
 
     @classmethod
     def _tokenize(cls, sentence):
@@ -39,11 +51,3 @@ class Tokenize(Step):
         tokens = nltk.word_tokenize(sentence)
         tokens = [x.lower() for x in tokens]
         return tokens
-
-    @staticmethod
-    def _pad(data):
-        width = max(len(x) for x in data)
-        for index, tokens in enumerate(data):
-            missing = width - len(tokens)
-            data[index] += ['' for _ in range(missing)]
-        return np.array(data)

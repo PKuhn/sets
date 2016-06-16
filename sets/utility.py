@@ -1,10 +1,10 @@
+import urllib.request as request
 import errno
 import functools
 import os
 import pickle
 import re
 import shutil
-from urllib.request import urlopen
 import definitions
 
 def read_config(schema='data/schema.yaml', name='sets'):
@@ -65,7 +65,7 @@ def download(url, directory, filename=None):
     if os.path.isfile(filepath):
         return filepath
     print('Download', filepath)
-    with urlopen(url) as response, open(filepath, 'wb') as file_:
+    with request.urlopen(url) as response, open(filepath, 'wb') as file_:
         shutil.copyfileobj(response, file_)
     return filepath
 

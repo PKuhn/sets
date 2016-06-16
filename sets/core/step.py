@@ -1,5 +1,7 @@
+import re
 import os
 from sets import utility
+from urllib.request import urlretrieve
 
 
 class Step:
@@ -21,13 +23,6 @@ class Step:
         return wrapper(*args, **kwargs)
 
     @classmethod
-    def download(cls, url, filename=None):
-        """
-        Download a file into the correct cache directory.
-        """
-        return utility.download(url, cls.directory(), filename)
-
-    @classmethod
     def directory(cls, prefix=None):
         """
         Path that should be used for caching. Different for all subclasses.
@@ -37,3 +32,20 @@ class Step:
         directory = os.path.expanduser(os.path.join(prefix, name))
         utility.ensure_directory(directory)
         return directory
+
+    @classmethod
+    def _split_dataset_path(cls, path):
+        """ Split hdf5 path into file and dataset name
+        Args:
+            path: string of format /my/filepath/file.hdf5/dataset_name
+        Returns
+            Tuple (/my/filepath/file.hdf5, dataset_name)
+        """
+        filepattern = '(.+?.hdf5)/(.*)'
+        pattern = re.compile(filepattern)
+        match = pattern.match(path)
+        if not match:
+            raise ValueError("Invalid input path {}".format(path))
+        file = match.group(1)
+        dataset = match.group(2)
+        return file, dataset

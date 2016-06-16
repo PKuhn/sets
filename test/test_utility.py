@@ -1,3 +1,5 @@
+import os
+import h5py
 import numpy as np
 import pytest
 import sets
@@ -9,6 +11,15 @@ def dataset():
     target = [0, 0.5, 1]
     return sets.Dataset(data=data, target=target)
 
+
+@pytest.fixture
+def hdf5(tmpdir):
+    file = h5py.File(str(tmpdir) + 'test.hdf5')
+    numbers = [1, 2, 3, 4, 2]
+    file.create_dataset('numbers', data=numbers, dtype=float)
+    return file
+
+
 def test_concat(dataset):
     dataset['other'] = [[1], [2], [3]]
     result = sets.Concat(1, 'data')(dataset, columns=('data', 'other'))
@@ -18,11 +29,14 @@ def test_concat(dataset):
     assert result.data.shape[1] == dataset.data.shape[1] + 1
     assert (result.data[:, :-1] == dataset.data).all()
 
-def test_onehot(dataset):
-    result = sets.OneHot(dataset.target)(dataset, columns=['target'])
-    assert result.target.shape[1] == len(np.unique(dataset.target))
-    assert (result.target.sum(axis=1)).all()
-    assert (result.target.max(axis=1)).all()
+
+def test_index_encoding(hdf5):
+    source_path = os.path.join(hdf5.filename, 'numbers')
+    target_path = os.path.join(hdf5.filename, 'encoded')
+    result = sets.IndexEncode()(source_path, target_path)
+    expected = np.array([0, 1, 2, 3, 1], dtype=np.int32)
+    assert (result['encoded'][:] == expected).all()
+
 
 def test_split(dataset):
     one, two = sets.Split(0.5)(dataset)
@@ -31,6 +45,7 @@ def test_split(dataset):
     target = np.concatenate((one.target, two.target))
     assert (data == dataset.data).all()
     assert (target == dataset.target).all()
+
 
 def test_normalize(dataset):
     width = dataset.data.shape[1]
@@ -46,12 +61,3 @@ def test_normalize(dataset):
     assert np.allclose(other.data.std(axis=0), np.ones(width))
     assert np.allclose(result.target.mean(axis=0), np.zeros(width))
     assert np.allclose(result.target.std(axis=0), np.ones(width))
-
-def test_embedding_found():
-    data = list('ceabb')
-    target = list('abddd')
-    vocabulary = list('abc')
-    dataset = sets.Dataset(data=data, target=target)
-    dataset, found = sets.OneHot(vocabulary)(
-        dataset, columns=['data', 'target'], return_found=True)
-    assert found == 6 / 10

@@ -11,10 +11,10 @@ class Glove(Embedding):
 
     URL = 'http://nlp.stanford.edu/data/glove.6B.zip'
 
-    def __init__(self, size=100, depth=1):
+    def __init__(self, size=100):
         assert size in (50, 100, 300)
         words, embeddings = self.disk_cache('data', self._load, size)
-        super().__init__(words, embeddings, depth)
+        super().__init__(words, embeddings)
         assert self.shape == (size,)
 
     @classmethod
